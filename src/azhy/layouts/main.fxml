@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<GridPane alignment="center" hgap="10" stylesheets="/azhy/StyleSheets/sample.css" vgap="10" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azhy.controllers.MainController">
+    <Pane prefHeight="30">
+        <children>
+            <TextField fx:id="textField" editable="false" layoutY="3" prefWidth="390" styleClass="txtField">
+            <font>
+               <Font size="18.0" />
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT" />
+            </cursor>
+            <opaqueInsets>
+               <Insets />
+            </opaqueInsets></TextField>
+            <Button layoutX="410" layoutY="5" text="Change Text" onMouseClicked="#changeText" />
+        </children>
+    </Pane>
+
+    <TextArea fx:id="textArea" editable="false" onKeyPressed="#typed" onMouseClicked="#clicked" prefHeight="250.0" prefWidth="500.0" promptText="Start Typing..." styleClass="txtArea" wrapText="true" GridPane.rowIndex="1" />
+    <Label GridPane.rowIndex="1" text="3" style="-fx-font-family: Roboto; -fx-font-size: 40px;" GridPane.halignment="CENTER" visible="false" fx:id="countingLabel"/>
+   <Pane prefHeight="50.0" prefWidth="200.0" GridPane.rowIndex="2" style="-fx-background-color: #F5F5F5; -fx-background-radius: 8;">
+       <padding><Insets topRightBottomLeft="10"/> </padding>
+      <children>
+          <Label fx:id="wpmLabel" layoutX="14.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill: #2C4A2E; -fx-opacity:0.7;" text="Speed : 0 wpm" />
+          <Label fx:id="accuracyLabel" layoutX="165.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill: #2B3855; -fx-opacity:0.7;" text="Accuracy : -" />
+          <Label fx:id="errorsLabel" layoutX="310.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill: #3C2121; -fx-opacity:0.7;" text="Errors : 0" />
+          <Label fx:id="timeLabel" layoutX="420.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill:  #3B3321; -fx-opacity:0.7; " text="Time : 60" />
+      </children>
+   </Pane>
+    <Button fx:id="stateButton" onAction="#stateButtonPressed" text="Start Typing" GridPane.rowIndex="3"><GridPane.margin><Insets top="10"/> </GridPane.margin></Button>
+   <columnConstraints>
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+   </rowConstraints>
+</GridPane>

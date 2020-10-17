@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<GridPane prefHeight="400.0" prefWidth="600.0" stylesheets="/azhy/StyleSheets/sample.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azhy.controllers.ChangeText">
+    <padding><Insets topRightBottomLeft="5"/></padding>
+    <Pane GridPane.columnIndex="1" GridPane.rowSpan="3" prefWidth="120" prefHeight="200">
+        <Label text="Type" layoutY="30" alignment="CENTER" prefWidth="120"/>
+        <CheckBox text="Text" layoutY="70" layoutX="30" disable="true" fx:id="textCheckBox"/>
+        <CheckBox text="Words" layoutY="96" layoutX="30" disable="true" fx:id="wordsCheckBox"/>
+        <Label alignment="CENTER" prefWidth="120" text="Preview &gt;" layoutY="200"/>
+    </Pane>
+    <TextField />
+    <ListView fx:id="textsListView" GridPane.rowIndex="1">
+
+    </ListView>
+    <Button onMouseClicked="#chooseText" text="Choose Text" GridPane.fillWidth="true" GridPane.halignment="CENTER" prefWidth="300" GridPane.rowIndex="2" />
+    <TextArea fx:id="previewTextArea" styleClass="previewTextArea" wrapText="true" GridPane.columnIndex="2" GridPane.columnSpan="1" GridPane.rowSpan="3"
+              editable="false"/>
+   <columnConstraints>
+      <ColumnConstraints />
+      <ColumnConstraints />
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+   </rowConstraints>
+</GridPane>
