@@ -7,7 +7,6 @@
     src: url('../Fonts/UbuntuMono-Regular.ttf');
 }
 
-
 .root{
     -fx-background-color:  #fbfbfb;
 }
@@ -40,6 +39,8 @@
 
 .text-area .content {
     -fx-background-color: transparent, white, transparent, white;
+
+    -fx-padding: 5 5 80 5; /* for windows we need this */
 }
 
 .text-area:focused .content {

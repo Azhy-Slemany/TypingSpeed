@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<GridPane xmlns="http://javafx.com/javafx"
+          xmlns:fx="http://javafx.com/fxml"
+          fx:controller="azhy.controllers.AddTextController"
+          prefWidth="300" prefHeight="300"
+          stylesheets="/azhy/StyleSheets/sample.css">
+    <padding><Insets topRightBottomLeft="10" /></padding>
+    <Label text="Text Name"><GridPane.margin><Insets right="10" bottom="10"/> </GridPane.margin></Label>
+    <TextField fx:id="nameTextField" GridPane.columnIndex="1" GridPane.columnSpan="2" prefWidth="210"><GridPane.margin><Insets bottom="10"/> </GridPane.margin></TextField>
+    <Label text="Text Type" GridPane.rowIndex="1" GridPane.columnIndex="0"><GridPane.margin><Insets right="10" bottom="20"/> </GridPane.margin></Label>
+    <RadioButton fx:id="textRadioButton" text="Text" selected="true" GridPane.rowIndex="1" GridPane.columnIndex="1"><GridPane.margin><Insets right="20" bottom="20"/> </GridPane.margin></RadioButton>
+    <RadioButton fx:id="wordsRadioButton" text="Words" GridPane.rowIndex="1" GridPane.columnIndex="2"><GridPane.margin><Insets bottom="20"/> </GridPane.margin></RadioButton>
+    <Label text="Text" GridPane.rowIndex="2" GridPane.columnIndex="0"><GridPane.margin><Insets right="10" bottom="10"/> </GridPane.margin></Label>
+    <TextArea fx:id="textArea" GridPane.rowIndex="2" GridPane.columnSpan="2" GridPane.columnIndex="1" style="-fx-font-size: 12px; -fx-border: 3;"/>
+    <Button onMouseClicked="#saveButtonClicked" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="2" text="Save" prefWidth="100"><GridPane.margin><Insets top="30"/> </GridPane.margin></Button>
+</GridPane>

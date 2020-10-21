@@ -1,5 +1,6 @@
 package azhy.controllers;
 
+import azhy.FileFactory;
 import azhy.PreparedText;
 import javafx.animation.*;
 import javafx.application.Platform;
@@ -27,6 +28,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.Timer;
@@ -43,7 +45,7 @@ public class MainController {
     public Label timeLabel;
     public Button stateButton;
 
-    private static final int TIME = 5 * 60;
+    private static final int TIME = (int)(1.0 * 60); // hey time goes to under zero while you space several times in the end of the time
 
     Timer timer, startingTimer;
     long currentTimeLapse = 0;
@@ -53,7 +55,7 @@ public class MainController {
     int deletedLetters;
     int correctTextLength;
     int currentTextIndex;
-    enum States{Rest, Writing, Starting}
+    enum States{Rest, Writing, Starting, Finished}
     States currentState = States.Rest;
     static ArrayList<PreparedText> preparedTexts;
     static PreparedText currentPreparedText;
@@ -69,13 +71,19 @@ public class MainController {
         errorsLabel.setText("Errors : " + errors.size());
     }
     private void setTimeLabel(long value){
-        String result = value >= 60? value / 60 + ":" + value % 60: value + "";
+        String result = value > 60? value / 60 + ":" + value % 60: value + "";
         timeLabel.setText("Time : " + result);
     }
 
 
     @FXML
     public void initialize() {
+        //load fonts for windows
+        Font robotoFont = tryLoadFont("Roboto-Regular.ttf", 22);
+        Font ubuntuMono = tryLoadFont("UbuntuMono-Regular.ttf", 22);
+        textArea.setFont(ubuntuMono);
+        textField.setFont(ubuntuMono);
+
         //initialize variables
         timer = new Timer();
         startingTimer = new Timer();
@@ -116,7 +124,8 @@ public class MainController {
         });
 
         //prepare texts
-        String jsonText = readFile("../Data/texts.json");
+        String jsonText = FileFactory.readResourceFile(
+                getClass(), "../Data/texts.json");
         if(jsonText != null) {
             JSONArray texts = new JSONArray(jsonText);
             for(int i=0; i<texts.length(); i++){
@@ -135,7 +144,15 @@ public class MainController {
         return new TimerTask() {
             @Override
             public void run() {
-                /* if(++time != TIME) */
+                if(currentTimeLapse >= TIME){
+                    new Thread(() -> {
+                        Platform.runLater(() ->
+                                stopTyping()
+                        );
+                    }).start();
+                    return;
+                }
+
                 timer.schedule(timerTask(), 1000); currentTimeLapse++;
                 new Thread(() -> {
                     Platform.runLater(() ->
@@ -198,12 +215,13 @@ public class MainController {
         timer.cancel();
         timer = new Timer();
         setAccuracyLabel(getAccuracy());
-        //currentState = States.Rest; change after the animation ends
+        currentState = States.Finished;
         animateCountingLabelFinished();
         stateButton.setText("Start Typing");
         currentTimeLapse = 0;
         currentWpm = 0;
         textArea.setEditable(false);
+        currentPreparedText.regenerateText();// time goes to under zero please fix this
     }
 
     public void stateButtonPressed(ActionEvent actionEvent){
@@ -223,7 +241,7 @@ public class MainController {
         if(currentState != States.Writing) return;
 
         if(currentTimeLapse >= TIME){
-            stopTyping();
+            //stopTyping();
             return;
         }
 
@@ -277,6 +295,8 @@ public class MainController {
     }
 
     public void changeText(MouseEvent mouseEvent){
+        if(currentState != States.Rest) stopTyping();
+
         Parent root;
         try {
             root = FXMLLoader.load(getClass().getResource("../layouts/changeText.fxml"));
@@ -362,12 +382,21 @@ public class MainController {
         player.play();
     }
 
-    private String readFile(String filePath){
-        try{
-            InputStream s = getClass().getResourceAsStream(filePath);
-            return new Scanner(s, "UTF-8").useDelimiter("\\A").next();
-        }catch (Exception e){
-            System.out.println("Error happened reading file: " + filePath);
+    private Font tryLoadFont(String fontName, double size){
+        try {
+            String fixedPath = getClass().
+                    getResource("../Fonts/" + fontName).toURI().
+                    toString().replace("%20", " ");
+            Font font = Font.loadFont(fixedPath, size);
+            if(font == null){
+                System.out.println("Error: Font file \"" + fontName +
+                        "\" couldn't be found.");
+                return null;
+            }
+            return font;
+        } catch (URISyntaxException e) {
+            System.out.println("Error: Font file \"" + fontName +
+                    "\" couldn't be found.");
             return null;
         }
     }

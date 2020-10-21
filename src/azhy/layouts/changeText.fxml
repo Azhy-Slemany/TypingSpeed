@@ -4,9 +4,9 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.geometry.Insets?>
-<GridPane prefHeight="400.0" prefWidth="600.0" stylesheets="/azhy/StyleSheets/sample.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azhy.controllers.ChangeText">
+<GridPane prefHeight="400.0" prefWidth="600.0" stylesheets="/azhy/StyleSheets/sample.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="azhy.controllers.ChangeTextController">
     <padding><Insets topRightBottomLeft="5"/></padding>
-    <Pane GridPane.columnIndex="1" GridPane.rowSpan="3" prefWidth="120" prefHeight="200">
+    <Pane GridPane.columnIndex="1" GridPane.rowSpan="5" prefWidth="120" prefHeight="200">
         <Label text="Type" layoutY="30" alignment="CENTER" prefWidth="120"/>
         <CheckBox text="Text" layoutY="70" layoutX="30" disable="true" fx:id="textCheckBox"/>
         <CheckBox text="Words" layoutY="96" layoutX="30" disable="true" fx:id="wordsCheckBox"/>
@@ -16,8 +16,10 @@
     <ListView fx:id="textsListView" GridPane.rowIndex="1">
 
     </ListView>
-    <Button onMouseClicked="#chooseText" text="Choose Text" GridPane.fillWidth="true" GridPane.halignment="CENTER" prefWidth="300" GridPane.rowIndex="2" />
-    <TextArea fx:id="previewTextArea" styleClass="previewTextArea" wrapText="true" GridPane.columnIndex="2" GridPane.columnSpan="1" GridPane.rowSpan="3"
+    <Button onMouseClicked="#chooseText" text="Choose Text" GridPane.fillWidth="true" GridPane.halignment="CENTER" prefWidth="300" GridPane.rowIndex="2" style="-fx-background-color:green;"/>
+    <Button onMouseClicked="#addNewText" text="Add New Text" GridPane.fillWidth="true" GridPane.halignment="CENTER" prefWidth="300" GridPane.rowIndex="3"><GridPane.margin><Insets top="20"/></GridPane.margin></Button>
+    <Button onMouseClicked="#deleteTextClicked" text="Delete Text" GridPane.fillWidth="true" GridPane.halignment="CENTER" prefWidth="300" GridPane.rowIndex="4" style="-fx-background-color:#cc1212d4;"><GridPane.margin><Insets top="10"/></GridPane.margin></Button>
+    <TextArea fx:id="previewTextArea" styleClass="previewTextArea" wrapText="true" GridPane.columnIndex="2" GridPane.columnSpan="1" GridPane.rowSpan="5"
               editable="false"/>
    <columnConstraints>
       <ColumnConstraints />
