@@ -9,13 +9,15 @@ import javafx.scene.input.MouseEvent;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import static azhy.FileFactory.*;
+
 public class AddTextController {
     public TextField nameTextField;
     public RadioButton textRadioButton, wordsRadioButton;
     public TextArea textArea;
 
     @FXML
-    public void initialize(){
+    public void initialize() {
 
         textRadioButton.setOnMouseClicked((e) -> {
             wordsRadioButton.setSelected(!textRadioButton.isSelected());
@@ -26,29 +28,25 @@ public class AddTextController {
         });
     }
 
-    public void saveButtonClicked(MouseEvent event){
+    public void saveButtonClicked(MouseEvent event) {
+        //check if some text already exists with that name
+        for (String key : MainController.preparedTexts.keySet())
+            if (MainController.preparedTexts.get(key).
+                    name.equals(nameTextField.getText())) {
+                //show a message box
+                return;
+            }
+
         //prepare texts
-        String jsonText = FileFactory.readResourceFile(
-                getClass(), "../Data/texts.json");
-        if(jsonText != null) {
-            JSONArray texts = new JSONArray(jsonText);
+        String name = nameTextField.getText();
+        String type = textRadioButton.isSelected() ? "text" : "words";
+        String value = textArea.getText();
+        PreparedText pText = new PreparedText(name, type, value);
+        MainController.preparedTexts.put(name, pText);
+        MainController.currentPreparedText = pText;
+        new Texts().update(getClass(), MainController.preparedTexts);
 
-            JSONObject text = new JSONObject();
-            String name = nameTextField.getText();
-            String type = textRadioButton.isSelected() ? "text" : "words";
-            String value = textArea.getText();
-            text.put("name", name);
-            text.put("type", type);
-            text.put("value", value);
-
-            texts.put(text);
-            FileFactory.writeResourceFile(getClass(),
-                    "../Data/texts.json", texts.toString());
-            PreparedText pText = new PreparedText(name, type, value);
-            MainController.preparedTexts.add(pText);
-            MainController.currentPreparedText = pText;
-        }
-        ((Node)event.getSource()).getScene().getWindow().hide();
+        ((Node) event.getSource()).getScene().getWindow().hide();
     }
 
 }

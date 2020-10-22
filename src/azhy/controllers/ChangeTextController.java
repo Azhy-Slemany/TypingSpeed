@@ -2,32 +2,22 @@ package azhy.controllers;
 
 import azhy.FileFactory;
 import azhy.PreparedText;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.Scanner;
+import java.util.Arrays;
+
+import static azhy.controllers.MainController.preparedTexts;
+import static azhy.controllers.MainController.currentPreparedText;
 
 public class ChangeTextController {
     public ListView<String> textsListView;
@@ -38,28 +28,37 @@ public class ChangeTextController {
     @FXML
     public void initialize(){
         //add current loaded texts
-        for(PreparedText text: MainController.preparedTexts){
+        String[] keys = preparedTexts.keySet().toArray(new String[0]);
+        Arrays.sort(keys);
+        for(String key: keys){
+            PreparedText text = preparedTexts.get(key);
             textsListView.getItems().add(text.name);
-            if(text == MainController.currentPreparedText)
-                textsListView.getSelectionModel().select(
-                        textsListView.getItems().size() - 1);
+            if(text == currentPreparedText) {
+                int index = textsListView.getItems().size() - 1;
+                textsListView.getSelectionModel().select(index);
+                previewTextArea.setText(currentPreparedText.value);
+                if (currentPreparedText.type.equals(PreparedText.TYPE_TEXT)) {
+                    textCheckBox.setSelected(true);
+                    wordsCheckBox.setSelected(false);
+                } else {
+                    textCheckBox.setSelected(false);
+                    wordsCheckBox.setSelected(true);
+                }
+            }
         }
 
         //add listener
         textsListView.getSelectionModel().selectedItemProperty().addListener(
-                new ChangeListener<String>() {
-                    public void changed(ObservableValue<? extends String> ov,
-                                        String old_val, String new_val) {
-                        int s = textsListView.getSelectionModel().getSelectedIndex();
-                        PreparedText pText = MainController.preparedTexts.get(s);
-                        previewTextArea.setText(pText.value);
-                        if(pText.type.equals(PreparedText.TYPE_TEXT)){
-                            textCheckBox.setSelected(true);
-                            wordsCheckBox.setSelected(false);
-                        }else{
-                            textCheckBox.setSelected(false);
-                            wordsCheckBox.setSelected(true);
-                        }
+                (ov, old_val, new_val) -> {
+                    String name = textsListView.getSelectionModel().getSelectedItem();
+                    PreparedText pText = preparedTexts.get(name);
+                    previewTextArea.setText(pText.value);
+                    if (pText.type.equals(PreparedText.TYPE_TEXT)) {
+                        textCheckBox.setSelected(true);
+                        wordsCheckBox.setSelected(false);
+                    } else {
+                        textCheckBox.setSelected(false);
+                        wordsCheckBox.setSelected(true);
                     }
                 });
     }
@@ -67,15 +66,21 @@ public class ChangeTextController {
     public void chooseText(MouseEvent mouseEvent){
         if(textsListView.getSelectionModel().isEmpty()) return;
 
-        int s = textsListView.getSelectionModel().getSelectedIndex();
-        MainController.currentPreparedText = MainController.preparedTexts.get(s);
-        ((Node)textsListView).getScene().getWindow().hide();
+        String name = textsListView.getSelectionModel().getSelectedItem();
+        currentPreparedText = preparedTexts.get(name);
+
+        //update userSettings.json
+        FileFactory.UserSettings settings = new FileFactory.UserSettings(getClass());
+        settings.set(getClass(), FileFactory.SETTINGS_LAST_CHOSEN_TEXT, name);
+
+        textsListView.getScene().getWindow().hide();
     }
 
     public void addNewText(MouseEvent mouseEvent){
         Parent root;
         try {
-            root = FXMLLoader.load(getClass().getResource("../layouts/addText.fxml"));
+            root = FXMLLoader.load(getClass().
+                    getResource("../layouts/addText.fxml"));
             Stage stage = new Stage();
             stage.setResizable(false);
             stage.setTitle("Add New Text");
@@ -92,18 +97,11 @@ public class ChangeTextController {
     public void deleteTextClicked(MouseEvent event){
         if(textsListView.getSelectionModel().isEmpty()) return;
 
+        String name = textsListView.getSelectionModel().getSelectedItem();
+        preparedTexts.remove(name);
+        new FileFactory.Texts().update(getClass(), preparedTexts);
+
         int index = textsListView.getSelectionModel().getSelectedIndex();
-
-        String jsonText = FileFactory.readResourceFile(
-                getClass(), "../Data/texts.json");
-        if(jsonText != null) {
-            JSONArray texts = new JSONArray(jsonText);
-            texts.remove(index);
-            FileFactory.writeResourceFile(
-                    getClass(), "../Data/texts.json", texts.toString());
-            MainController.preparedTexts.remove(index);
-        }
-
         textsListView.getItems().remove(index);
     }
 }

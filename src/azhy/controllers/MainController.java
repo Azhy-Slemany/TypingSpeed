@@ -1,10 +1,12 @@
 package azhy.controllers;
 
-import azhy.FileFactory;
+import azhy.FileFactory.Texts;
+import azhy.FileFactory.UserSettings;
 import azhy.PreparedText;
-import javafx.animation.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,21 +21,15 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
+import static azhy.FileFactory.SETTINGS_LAST_CHOSEN_TEXT;
 
 public class MainController {
     public TextField textField;
@@ -57,7 +53,7 @@ public class MainController {
     int currentTextIndex;
     enum States{Rest, Writing, Starting, Finished}
     States currentState = States.Rest;
-    static ArrayList<PreparedText> preparedTexts;
+    static Map<String, PreparedText> preparedTexts;
     static PreparedText currentPreparedText;
 
     //set labels
@@ -78,8 +74,8 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        //load fonts for windows
-        Font robotoFont = tryLoadFont("Roboto-Regular.ttf", 22);
+        //load fonts for those users who their username contains whitespace
+        //Font robotoFont = tryLoadFont("Roboto-Regular.ttf", 22);
         Font ubuntuMono = tryLoadFont("UbuntuMono-Regular.ttf", 22);
         textArea.setFont(ubuntuMono);
         textField.setFont(ubuntuMono);
@@ -87,7 +83,7 @@ public class MainController {
         //initialize variables
         timer = new Timer();
         startingTimer = new Timer();
-        preparedTexts = new ArrayList<>();
+        preparedTexts = new HashMap<>();
         setTimeLabel(TIME);
 
         //make tab 4 spaces and add other key pressed activities
@@ -124,20 +120,13 @@ public class MainController {
         });
 
         //prepare texts
-        String jsonText = FileFactory.readResourceFile(
-                getClass(), "../Data/texts.json");
-        if(jsonText != null) {
-            JSONArray texts = new JSONArray(jsonText);
-            for(int i=0; i<texts.length(); i++){
-                JSONObject text = (JSONObject) texts.get(i);
-                String name = text.getString("name");
-                String type = text.getString("type");
-                String value = text.getString("value");
-                preparedTexts.add(new PreparedText(name, type, value));
-            }
-            currentPreparedText = preparedTexts.get(0);
-        }
+        Texts texts = new Texts();
+        preparedTexts = texts.get(getClass());
 
+        //read user settings
+        UserSettings settings = new UserSettings(getClass());
+        String textName = (String)settings.get(SETTINGS_LAST_CHOSEN_TEXT);
+        currentPreparedText = preparedTexts.get(textName);
     }
 
     private TimerTask timerTask(){
@@ -145,20 +134,16 @@ public class MainController {
             @Override
             public void run() {
                 if(currentTimeLapse >= TIME){
-                    new Thread(() -> {
-                        Platform.runLater(() ->
-                                stopTyping()
-                        );
-                    }).start();
+                    new Thread(() -> Platform.runLater(() ->
+                            stopTyping()
+                    )).start();
                     return;
                 }
 
                 timer.schedule(timerTask(), 1000); currentTimeLapse++;
-                new Thread(() -> {
-                    Platform.runLater(() ->
-                            setTimeLabel(TIME - currentTimeLapse)
-                    );
-                }).start();
+                new Thread(() -> Platform.runLater(() ->
+                        setTimeLabel(TIME - currentTimeLapse)
+                )).start();
             }
         };
     }
@@ -168,17 +153,16 @@ public class MainController {
             @Override
             public void run() {
                 if(startingTime == 1){
-                    new Thread(() -> {
-                        Platform.runLater(() -> {
-                            textArea.setText("");
-                            startTyping();
-                        });
-                    }).start();
+                    new Thread(() -> Platform.runLater(() -> {
+                        textArea.setText("");
+                        startTyping();
+                    })).start();
                     return;
                 }else startingTime--;
-                new Thread(() -> {
-                    Platform.runLater(() -> countingLabel.setText(String.valueOf(startingTime)));
-                }).start();
+                new Thread(() -> Platform.runLater(() ->
+                        countingLabel.setText(
+                                String.valueOf(startingTime)))
+                ).start();
                 startingTimer.schedule(startingTimerTask(), 1000);
             }
         };
@@ -241,7 +225,8 @@ public class MainController {
         if(currentState != States.Writing) return;
 
         if(currentTimeLapse >= TIME){
-            //stopTyping();
+            if(textArea.isEditable())
+                textArea.setEditable(false);
             return;
         }
 
