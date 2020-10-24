@@ -12,7 +12,7 @@
         <CheckBox text="Words" layoutY="96" layoutX="30" disable="true" fx:id="wordsCheckBox"/>
         <Label alignment="CENTER" prefWidth="120" text="Preview &gt;" layoutY="200"/>
     </Pane>
-    <TextField />
+    <TextField fx:id="searchTextField" promptText="search..." onKeyPressed="#searched"/>
     <ListView fx:id="textsListView" GridPane.rowIndex="1">
 
     </ListView>

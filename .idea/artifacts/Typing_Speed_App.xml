@@ -4,11 +4,21 @@
     <properties id="javafx-properties">
       <options>
         <option name="appClass" value="sample.Main" />
-        <option name="description" value="Hello World" />
+        <option name="description" value="Typing Speed is a desktop application that can count your typing test speed, with some more functionalities." />
+        <option name="height" value="450" />
         <option name="htmlPlaceholderId" value="" />
-        <option name="title" value="Azhy" />
+        <option name="icons">
+          <JavaFxApplicationIcons>
+            <option name="linuxIcon" value="$PROJECT_DIR$/keyboard.ico" />
+            <option name="macIcon" value="$PROJECT_DIR$/keyboard.ico" />
+            <option name="windowsIcon" value="$PROJECT_DIR$/keyboard.ico" />
+          </JavaFxApplicationIcons>
+        </option>
+        <option name="nativeBundle" value="all" />
+        <option name="title" value="Typing Speed" />
         <option name="vendor" value="Azhy;" />
-        <option name="version" value="" />
+        <option name="version" value="1.0" />
+        <option name="width" value="550" />
       </options>
     </properties>
     <root id="root">

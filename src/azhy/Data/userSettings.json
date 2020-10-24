@@ -1,3 +1,6 @@
 {
-  "lastChosenText": "Sample Text 1"
+  "lastChosenText": "Sample Text 1",
+  "defaultTexts": "Sample Text 1|Sample Text 2|Sample Text 3|Some Random Words|Java for-loop Practice|100 Most Common English Words|Punctuation Practice",
+  "sound": true,
+  "time": 60
 }

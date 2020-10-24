@@ -29,11 +29,16 @@ public class AddTextController {
     }
 
     public void saveButtonClicked(MouseEvent event) {
+        if(nameTextField.getText().equals("")) return;
+
         //check if some text already exists with that name
         for (String key : MainController.preparedTexts.keySet())
             if (MainController.preparedTexts.get(key).
                     name.equals(nameTextField.getText())) {
-                //show a message box
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("An text already exist with that " +
+                        "name, please change the name.");
+                alert.show();
                 return;
             }
 
@@ -44,7 +49,7 @@ public class AddTextController {
         PreparedText pText = new PreparedText(name, type, value);
         MainController.preparedTexts.put(name, pText);
         MainController.currentPreparedText = pText;
-        new Texts().update(getClass(), MainController.preparedTexts);
+        new Texts().addText(getClass(), pText);
 
         ((Node) event.getSource()).getScene().getWindow().hide();
     }

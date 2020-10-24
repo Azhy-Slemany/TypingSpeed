@@ -1,5 +1,6 @@
 package azhy.controllers;
 
+import azhy.FileFactory;
 import azhy.FileFactory.Texts;
 import azhy.FileFactory.UserSettings;
 import azhy.PreparedText;
@@ -12,14 +13,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
@@ -27,9 +26,10 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.Time;
 import java.util.*;
 
-import static azhy.FileFactory.SETTINGS_LAST_CHOSEN_TEXT;
+import static azhy.FileFactory.*;
 
 public class MainController {
     public TextField textField;
@@ -40,8 +40,10 @@ public class MainController {
     public Label errorsLabel;
     public Label timeLabel;
     public Button stateButton;
+    public ComboBox<String> timeComboBox;
+    public ImageView muteImageView;
 
-    private static final int TIME = (int)(1.0 * 60); // hey time goes to under zero while you space several times in the end of the time
+    private static int TIME = (int)(1.0 * 60);
 
     Timer timer, startingTimer;
     long currentTimeLapse = 0;
@@ -55,6 +57,8 @@ public class MainController {
     States currentState = States.Rest;
     static Map<String, PreparedText> preparedTexts;
     static PreparedText currentPreparedText;
+    Map<String, MediaPlayer> sounds;
+    boolean isMuted = false;
 
     //set labels
     private void setWpmLabel(Object value){
@@ -85,6 +89,7 @@ public class MainController {
         startingTimer = new Timer();
         preparedTexts = new HashMap<>();
         setTimeLabel(TIME);
+        sounds = FileFactory.Sounds.loadSoundFiles(getClass());
 
         //make tab 4 spaces and add other key pressed activities
         textArea.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
@@ -109,6 +114,9 @@ public class MainController {
                         errorsLabel.setText("Errors : " + errors.size());
                     }
                 }
+
+                //play music
+                playSound(sounds.get(FileFactory.Sounds.TYPING_ERROR_SOUND));
             }else if(key == KeyCode.SPACE){
                 String txt = textArea.getText();
                 if(txt.length() > 0 && txt.toCharArray()[txt.length() - 1] == ' '){
@@ -121,12 +129,23 @@ public class MainController {
 
         //prepare texts
         Texts texts = new Texts();
-        preparedTexts = texts.get(getClass());
+        preparedTexts = texts.getPreparedTexts(getClass());
+
+        //add times
+        timeComboBox.getItems().addAll(
+                "30 secs", "1 min", "2 min", "5 min", "10 min");
 
         //read user settings
         UserSettings settings = new UserSettings(getClass());
-        String textName = (String)settings.get(SETTINGS_LAST_CHOSEN_TEXT);
+        String textName = (String)settings.get(UserSettings.SETTINGS_LAST_CHOSEN_TEXT);
         currentPreparedText = preparedTexts.get(textName);
+        currentPreparedText.loadValue(getClass());
+
+        isMuted = !(boolean)settings.get(UserSettings.SETTINGS_SOUND);
+        if(isMuted) muteImageView.setImage(Images.getImage(getClass(), Images.IMAGE_MUTE));
+
+        TIME = (int)settings.get(UserSettings.SETTINGS_TIME);
+        setTimeLabel(TIME);
     }
 
     private TimerTask timerTask(){
@@ -175,7 +194,7 @@ public class MainController {
         textArea.requestFocus();
         animateCountingLabel();
         currentState = States.Starting;
-        textField.setText(currentPreparedText.getText());
+        textField.setText(currentPreparedText.getText(getClass()));
         startingTime = 4;
         startingTimer.schedule(startingTimerTask(), 0);
     }
@@ -205,7 +224,7 @@ public class MainController {
         currentTimeLapse = 0;
         currentWpm = 0;
         textArea.setEditable(false);
-        currentPreparedText.regenerateText();// time goes to under zero please fix this
+        currentPreparedText.regenerateText(getClass());// time goes to under zero please fix this
     }
 
     public void stateButtonPressed(ActionEvent actionEvent){
@@ -214,6 +233,26 @@ public class MainController {
             return;
         }
         stopTyping();
+    }
+
+    public void muteImageViewClicked(MouseEvent mouseEvent){
+        String name = isMuted? Images.IMAGE_SOUND: Images.IMAGE_MUTE;
+        muteImageView.setImage(Images.getImage(getClass(), name));
+        isMuted = !isMuted;
+        new UserSettings(getClass()).set(getClass(),
+                UserSettings.SETTINGS_SOUND, !isMuted);
+    }
+
+    public void timeComboBoxChose(ActionEvent actionEvent){
+        int index = timeComboBox.getSelectionModel().getSelectedIndex();
+        if(index == 0) TIME = 30;
+        else if(index == 1) TIME = (int)(1.0 * 60);
+        else if(index == 2) TIME = (int)(2.0 * 60);
+        else if(index == 3) TIME = (int)(5.0 * 60);
+        else if(index == 4) TIME = (int)(10.0 * 60);
+        setTimeLabel(TIME);
+        new UserSettings(getClass()).set(getClass(),
+                UserSettings.SETTINGS_TIME, TIME);
     }
 
     public void typed(KeyEvent keyEvent){
@@ -229,6 +268,8 @@ public class MainController {
                 textArea.setEditable(false);
             return;
         }
+
+        playSound(sounds.get(FileFactory.Sounds.TYPING_SOUND));
 
         KeyCode code = keyEvent.getCode();
 
@@ -300,7 +341,8 @@ public class MainController {
 
     private ArrayList<Object> getDeletedWord(){
         if(currentTextIndex == 0) return null;
-        String beforeText = currentPreparedText.getText().substring(0, currentTextIndex - 1);
+        String beforeText = currentPreparedText.getText(getClass())
+                .substring(0, currentTextIndex - 1);
         String[] beforeWords = beforeText.split("\\s+");
         ArrayList<Object> result = new ArrayList<Object>();
         result.add(beforeWords[beforeWords.length - 1]);
@@ -322,7 +364,7 @@ public class MainController {
     }
 
     private String getAccuracy(){
-        String text = currentPreparedText.getText();// I think we should count missed words as accuracy reducers also
+        String text = currentPreparedText.getText(getClass());// I think we should count missed words as accuracy reducers also
         double cLetters = text.replace(" ", "").length();
         double result = Math.round((1 - (deletedLetters / (cLetters))) * 1000) / 10.0;
         return result == Math.round(result) ? ((int) result) + "" : result + "";
@@ -361,9 +403,9 @@ public class MainController {
         });
     }
 
-    private void playMusic(String filePath){
-        Media sound = new Media(getClass().getResource(filePath).toExternalForm());
-        MediaPlayer player = new MediaPlayer(sound);
+    private void playSound(MediaPlayer player){
+        if(isMuted) return;
+        player.stop();
         player.play();
     }
 

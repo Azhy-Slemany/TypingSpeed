@@ -3,6 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
@@ -19,14 +20,14 @@
             <opaqueInsets>
                <Insets />
             </opaqueInsets></TextField>
-            <Button layoutX="410" layoutY="5" text="Change Text" onMouseClicked="#changeText" />
+            <Button layoutX="410" layoutY="5" onMouseClicked="#changeText" text="Change Text" />
         </children>
     </Pane>
 
     <TextArea fx:id="textArea" editable="false" onKeyPressed="#typed" onMouseClicked="#clicked" prefHeight="250.0" prefWidth="500.0" promptText="Start Typing..." styleClass="txtArea" wrapText="true" GridPane.rowIndex="1" />
-    <Label GridPane.rowIndex="1" text="3" style="-fx-font-family: Roboto; -fx-font-size: 40px;" GridPane.halignment="CENTER" visible="false" fx:id="countingLabel"/>
-   <Pane prefHeight="50.0" prefWidth="200.0" GridPane.rowIndex="2" style="-fx-background-color: #F5F5F5; -fx-background-radius: 8;">
-       <padding><Insets topRightBottomLeft="10"/> </padding>
+    <Label fx:id="countingLabel" style="-fx-font-family: Roboto; -fx-font-size: 40px;" text="3" visible="false" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+   <Pane prefHeight="50.0" prefWidth="200.0" style="-fx-background-color: #F5F5F5; -fx-background-radius: 8;" GridPane.rowIndex="2">
+       <padding><Insets topRightBottomLeft="10" /> </padding>
       <children>
           <Label fx:id="wpmLabel" layoutX="14.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill: #2C4A2E; -fx-opacity:0.7;" text="Speed : 0 wpm" />
           <Label fx:id="accuracyLabel" layoutX="165.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill: #2B3855; -fx-opacity:0.7;" text="Accuracy : -" />
@@ -34,7 +35,15 @@
           <Label fx:id="timeLabel" layoutX="420.0" layoutY="10.0" prefHeight="30.0" prefWidth="120.0" style="-fx-text-fill:  #3B3321; -fx-opacity:0.7; " text="Time : 60" />
       </children>
    </Pane>
-    <Button fx:id="stateButton" onAction="#stateButtonPressed" text="Start Typing" GridPane.rowIndex="3"><GridPane.margin><Insets top="10"/> </GridPane.margin></Button>
+    <Pane GridPane.rowIndex="3">
+        <padding><Insets topRightBottomLeft="5" /> </padding>
+        <Button fx:id="stateButton" layoutX="5" layoutY="15" onAction="#stateButtonPressed" text="Start Typing" />
+        <ComboBox fx:id="timeComboBox" layoutY="15" layoutX="200" onAction="#timeComboBoxChose" promptText="Time"/>
+        <ImageView fx:id="muteImageView" fitHeight="24.0" fitWidth="24.0" layoutX="450.0" layoutY="15.0" onMouseClicked="#muteImageViewClicked">
+         <image>
+            <Image url="@../Images/sound.png" />
+         </image></ImageView>
+    </Pane>
    <columnConstraints>
       <ColumnConstraints />
    </columnConstraints>
