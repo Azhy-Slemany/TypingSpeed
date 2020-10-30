@@ -1,14 +1,10 @@
 package azhy;
 
-import azhy.controllers.MainController;
 import javafx.scene.image.Image;
 import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,11 +16,28 @@ import java.util.Scanner;
 
 public abstract class FileFactory {
 
+    public static final boolean IS_PRODUCTION = true;
+    public static final String PARENT_PATH = "/azhy";
+
     public static final String RESOURCE_FILE_TEXTS = "../Data/texts.json";
     public static final String RESOURCE_FILE_USER_SETTINGS = "../Data/userSettings.json";
 
     public static String readResourceFile(Class tClass, String filePath){
         try{
+            if(IS_PRODUCTION) {
+                filePath = filePath.replace("..", PARENT_PATH);
+                String productionPath = getProductionPath(tClass, filePath);
+                File file = new File(productionPath);
+                if(file.exists()){
+                    Path path = file.toPath();
+                    var reader = Files.newBufferedReader(path);
+                    StringBuilder result = new StringBuilder();
+                    int c;
+                    while((c=reader.read())!=-1) result.append((char) c);
+                    return result.toString();
+                }
+            }
+
             InputStream s = tClass.getResourceAsStream(filePath);
             return new Scanner(s, "UTF-8").useDelimiter("\\A").next();
         }catch (Exception e){
@@ -34,10 +47,9 @@ public abstract class FileFactory {
     }
     public static void writeResourceFile(Class tClass, String filePath, String text){
         try{
-            String file = tClass.getResource(filePath).toURI()
-                    .toString().replace("%20", " ").
-                            replace("file:/", "");
-            Path path = Paths.get(file);
+            String file = IS_PRODUCTION? getProductionPath(tClass, filePath):
+                    tClass.getResource(filePath).getFile();
+            Path path = new File(file).toPath();
             Writer out = Files.newBufferedWriter(path, Charset.defaultCharset(),
                     StandardOpenOption.WRITE, StandardOpenOption.CREATE);
             out.write(text);
@@ -45,6 +57,22 @@ public abstract class FileFactory {
             out.close();
         }catch (Exception e){
             System.out.println("Error happened writing to file: " + filePath);
+            System.out.println(e.getMessage());
+        }
+    }
+    private static String getProductionPath(Class tClass, String filePath){
+        try {
+            String jarPath = new File(tClass.getProtectionDomain().getCodeSource().
+                    getLocation().getFile()).getParent();
+
+            String[] locs = filePath.split("[\\\\\\/]");
+            String fileName = locs[locs.length - 1];
+
+            return Paths.get(jarPath, fileName).toString();
+        }catch (Exception e){
+            System.out.println("Error getting productionPath to resource file: " + filePath);
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -53,6 +81,9 @@ public abstract class FileFactory {
         public static final String SETTINGS_DEFAULT_TEXTS = "defaultTexts";
         public static final String SETTINGS_SOUND = "sound";
         public static final String SETTINGS_TIME = "time";
+        public static final String SETTINGS_WARNING = "warning";
+        public static final String SETTINGS_ABOUT_TEXT = "aboutText";
+        public static final String SETTINGS_HELP_TEXT = "helpText";
 
         private JSONObject json;
 
@@ -127,31 +158,43 @@ public abstract class FileFactory {
     }
 
     public static class Sounds{
-        public static final String TYPING_SOUND = "typingSound.mp3";
+        public static final String TYPING_SOUND = "typingSound.wav";
         public static final String TYPING_ERROR_SOUND = "typingErrorSound.wav";
+        public static final String WINNING_SOUND = "winning.wav";
+        public static final String STARTING_SOUND = "starting.wav";
+        public static final String STARTING_1_SOUND = "starting_1.wav";
 
-        public static Map<String, MediaPlayer> loadSoundFiles(Class class_){
-            Map<String, MediaPlayer> result = new HashMap<>();
+        public static Map<String, Media> loadSoundFiles(Class class_){
+            Map<String, Media> result = new HashMap<>();
 
-            result.put(TYPING_SOUND, getMediaPlayer(class_, TYPING_SOUND));
-            result.put(TYPING_ERROR_SOUND, getMediaPlayer(class_, TYPING_ERROR_SOUND));
+            result.put(TYPING_SOUND, getMedia(class_, TYPING_SOUND));
+            result.put(TYPING_ERROR_SOUND, getMedia(class_, TYPING_ERROR_SOUND));
+            result.put(WINNING_SOUND, getMedia(class_, WINNING_SOUND));
+            result.put(STARTING_SOUND, getMedia(class_, STARTING_SOUND));
+            result.put(STARTING_1_SOUND, getMedia(class_, STARTING_1_SOUND));
 
             return result;
         }
 
-        private static MediaPlayer getMediaPlayer(Class class_, String name){
+        private static Media getMedia(Class class_, String name){
             String path = "../SoundFiles/" + name;
+
+            if(IS_PRODUCTION) path = path.replace("..", PARENT_PATH);
+
             Media media = new Media(class_.getResource(path).toExternalForm());
-            return new MediaPlayer(media);
+            return media;
         }
     }
 
     public static class Images{
         public static final String IMAGE_SOUND = "sound.png";
         public static final String IMAGE_MUTE = "mute.png";
+        public static final String IMAGE_WARNING = "warning.png";
+        public static final String IMAGE_NOT_WARNING = "not_warning.png";
 
         public static Image getImage(Class class_, String name){
             String path = "../Images/" + name;
+            if(IS_PRODUCTION) path = path.replace("..", PARENT_PATH);
             return new Image(class_.getResource(path).toExternalForm());
         }
     }

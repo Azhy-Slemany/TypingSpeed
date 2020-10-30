@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static azhy.FileFactory.IS_PRODUCTION;
+import static azhy.FileFactory.PARENT_PATH;
 import static azhy.controllers.MainController.preparedTexts;
 import static azhy.controllers.MainController.currentPreparedText;
 
@@ -88,8 +90,10 @@ public class ChangeTextController {
     public void addNewText(MouseEvent mouseEvent){
         Parent root;
         try {
-            root = FXMLLoader.load(getClass().
-                    getResource("../layouts/addText.fxml"));
+            String name = "../layouts/addText.fxml";
+            if(IS_PRODUCTION) name = name.replace("..", PARENT_PATH);
+
+            root = FXMLLoader.load(getClass().getResource(name));
             Stage stage = new Stage();
             stage.setResizable(false);
             stage.setTitle("Add New Text");

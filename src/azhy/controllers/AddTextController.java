@@ -29,7 +29,8 @@ public class AddTextController {
     }
 
     public void saveButtonClicked(MouseEvent event) {
-        if(nameTextField.getText().equals("")) return;
+        if(nameTextField.getText().equals("") || textArea.getText().equals(""))
+            return;
 
         //check if some text already exists with that name
         for (String key : MainController.preparedTexts.keySet())
@@ -49,8 +50,16 @@ public class AddTextController {
         PreparedText pText = new PreparedText(name, type, value);
         MainController.preparedTexts.put(name, pText);
         MainController.currentPreparedText = pText;
+
+        //add to texts file
         new Texts().addText(getClass(), pText);
 
+        //change last chosen text
+        FileFactory.UserSettings settings = new FileFactory.UserSettings(getClass());
+        settings.set(getClass(), FileFactory.UserSettings
+                .SETTINGS_LAST_CHOSEN_TEXT, name);
+
+        //hide the window
         ((Node) event.getSource()).getScene().getWindow().hide();
     }
 

@@ -38,11 +38,32 @@
     <Pane GridPane.rowIndex="3">
         <padding><Insets topRightBottomLeft="5" /> </padding>
         <Button fx:id="stateButton" layoutX="5" layoutY="15" onAction="#stateButtonPressed" text="Start Typing" />
-        <ComboBox fx:id="timeComboBox" layoutY="15" layoutX="200" onAction="#timeComboBoxChose" promptText="Time"/>
-        <ImageView fx:id="muteImageView" fitHeight="24.0" fitWidth="24.0" layoutX="450.0" layoutY="15.0" onMouseClicked="#muteImageViewClicked">
-         <image>
-            <Image url="@../Images/sound.png" />
-         </image></ImageView>
+        <ComboBox fx:id="timeComboBox" layoutY="15" layoutX="100" onAction="#timeComboBoxChose" promptText="Time"/>
+        <Pane prefHeight="24.0" prefWidth="24.0" layoutX="450.0" layoutY="15.0" onMouseClicked="#muteImageViewClicked">
+            <ImageView fx:id="muteImageView" fitHeight="24.0" fitWidth="24.0">
+                <image>
+                    <Image url="@../Images/sound.png" />
+                </image></ImageView>
+        </Pane>
+        <Pane onMouseClicked="#warningImageViewClicked" prefHeight="24.0" prefWidth="24.0" layoutX="390.0" layoutY="15.0">
+            <ImageView fx:id="warningImageView" fitHeight="24.0" fitWidth="24.0">
+                <image>
+                    <Image url="@../Images/warning.png" />
+                </image></ImageView>
+        </Pane>
+        <Pane prefHeight="24.0" prefWidth="24.0" layoutX="330.0" layoutY="15.0" onMouseClicked="#helpImageViewClicked">
+            <ImageView fitHeight="24.0" fitWidth="24.0">
+                <image>
+                    <Image url="@../Images/help.png" />
+                </image></ImageView>
+        </Pane>
+        <Pane prefHeight="24.0" prefWidth="24.0" layoutX="270.0" layoutY="15.0" onMouseClicked="#aboutImageViewClicked">
+            <ImageView fitHeight="24.0" fitWidth="24.0">
+                <image>
+                    <Image url="@../Images/about.png" />
+                </image></ImageView>
+        </Pane>
+
     </Pane>
    <columnConstraints>
       <ColumnConstraints />

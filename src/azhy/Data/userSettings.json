@@ -1,6 +1,9 @@
 {
   "lastChosenText": "Sample Text 1",
-  "defaultTexts": "Sample Text 1|Sample Text 2|Sample Text 3|Some Random Words|Java for-loop Practice|100 Most Common English Words|Punctuation Practice",
+  "defaultTexts": "Sample Text 1|Sample Text 2|Sample Text 3|Some Kurdish Names|100 Most Common English Words|Punctuation Practice",
   "sound": true,
-  "time": 60
+  "time": 60,
+  "warning": true,
+  "aboutText": "<body style=\"background-color: #eee;\">\n<h2 style=\"font-family: Roboto;\">Typing Speed <span style=\"font-size: 11px;\">by Azhy Slemany</span></h2>\n<p style=\"font-family: Roboto;\">This is a simple <strong>Typing Speed Test</strong> computer software made by <strong>Azhy Slemany</strong> in 2020 using <strong>JavaFX</strong> Framework, it's open-source and it's made for being able to practice typing speed without having internet connection, and you can know more about me on my personal blog.</p>\n  <span style=\"font-size:12px\">Source Code : <span style=\"color:blue\">https://github.com/Azhy-Slemany/TypingSpeed</span></span>\n  <br/>\n  <span style=\"font-size:12px\">Personal Blog : <span style=\"color:blue\">https://azhy-slemany.github.io</span></span>\n</body>",
+  "helpText": "Start typing by pressing the start typing button, press the stop button whenever you wanted to stop typing, press mute button to play sound effects BUT be careful it might crash the application on some computer systems while playing sound effects, this won't affect your computer only break the application, if that happened just mute the application using the mute button, you can warn yourself with a timed red color while writing wrong letters with the warning button in the bottom, you can change texts by using the change text button in the top, just choose the text you want and then click choose text, you can add custom texts to the program using add new text button in the change text window, write a name for the text and choose the text type and then write the text in the below textbox, we have two text types: text and words, the text means that you want to add a constant text to the program that doesn't change everytime you type, but the words option means it's changing everytime you start typing and the words can be separated by this symbol '|'."
 }

@@ -9,24 +9,36 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventTarget;
+import org.w3c.dom.html.HTMLAnchorElement;
 
+import java.awt.*;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Time;
 import java.util.*;
 
 import static azhy.FileFactory.*;
@@ -42,6 +54,7 @@ public class MainController {
     public Button stateButton;
     public ComboBox<String> timeComboBox;
     public ImageView muteImageView;
+    public ImageView warningImageView;
 
     private static int TIME = (int)(1.0 * 60);
 
@@ -50,15 +63,18 @@ public class MainController {
     int startingTime = 0;
     int currentWpm;
     ArrayList<Integer> errors;
-    int deletedLetters;
+    int wrongLetters;
     int correctTextLength;
     int currentTextIndex;
     enum States{Rest, Writing, Starting, Finished}
     States currentState = States.Rest;
     static Map<String, PreparedText> preparedTexts;
     static PreparedText currentPreparedText;
-    Map<String, MediaPlayer> sounds;
+    Map<String, Media> sounds;
+    MediaPlayer currentMediaPlayer;
     boolean isMuted = false;
+    boolean isWarning = false;
+    boolean isMakingTextAreaRed = false;
 
     //set labels
     private void setWpmLabel(Object value){
@@ -91,13 +107,13 @@ public class MainController {
         setTimeLabel(TIME);
         sounds = FileFactory.Sounds.loadSoundFiles(getClass());
 
-        //make tab 4 spaces and add other key pressed activities
+        //make tab unworkable and add other key pressed activities
         textArea.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             if(!currentState.equals(States.Writing)) return;
 
             KeyCode key = e.getCode();
             if (key == KeyCode.TAB) {
-                textArea.insertText(textArea.getCaretPosition(), " ".repeat(4));
+                //textArea.insertText(textArea.getCaretPosition(), " ".repeat(4));
                 e.consume();
             }else if(key == KeyCode.BACK_SPACE){
                 //listen to backspace for reducing errors when reach them
@@ -116,7 +132,7 @@ public class MainController {
                 }
 
                 //play music
-                playSound(sounds.get(FileFactory.Sounds.TYPING_ERROR_SOUND));
+                playSound(sounds.get(FileFactory.Sounds.TYPING_SOUND));
             }else if(key == KeyCode.SPACE){
                 String txt = textArea.getText();
                 if(txt.length() > 0 && txt.toCharArray()[txt.length() - 1] == ' '){
@@ -146,6 +162,10 @@ public class MainController {
 
         TIME = (int)settings.get(UserSettings.SETTINGS_TIME);
         setTimeLabel(TIME);
+
+        isWarning = (boolean)settings.get(UserSettings.SETTINGS_WARNING);
+        if(!isWarning)
+            warningImageView.setImage(Images.getImage(getClass(), Images.IMAGE_NOT_WARNING));
     }
 
     private TimerTask timerTask(){
@@ -175,13 +195,14 @@ public class MainController {
                     new Thread(() -> Platform.runLater(() -> {
                         textArea.setText("");
                         startTyping();
+                        playSound(sounds.get(Sounds.STARTING_1_SOUND));
                     })).start();
                     return;
                 }else startingTime--;
-                new Thread(() -> Platform.runLater(() ->
-                        countingLabel.setText(
-                                String.valueOf(startingTime)))
-                ).start();
+                new Thread(() -> Platform.runLater(() ->{
+                    countingLabel.setText(String.valueOf(startingTime));
+                    playSound(sounds.get(Sounds.STARTING_SOUND));
+                })).start();
                 startingTimer.schedule(startingTimerTask(), 1000);
             }
         };
@@ -203,7 +224,7 @@ public class MainController {
         currentState = States.Writing;
         errors = new ArrayList<>();
         setErrorsLabel();
-        deletedLetters = 0;
+        wrongLetters = 0;
         timer.schedule(timerTask(), 1000);
         setAccuracyLabel('-');
         textArea.setEditable(true);
@@ -243,6 +264,35 @@ public class MainController {
                 UserSettings.SETTINGS_SOUND, !isMuted);
     }
 
+    public void warningImageViewClicked(MouseEvent mouseEvent){
+        String name = isWarning? Images.IMAGE_NOT_WARNING: Images.IMAGE_WARNING;
+        warningImageView.setImage(Images.getImage(getClass(), name));
+        isWarning = !isWarning;
+        new UserSettings(getClass()).set(getClass(),
+                UserSettings.SETTINGS_WARNING, isWarning);
+    }
+
+    public void aboutImageViewClicked(MouseEvent mouseEvent){
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About");
+        alert.setHeaderText("About the Author of this software");
+        UserSettings settings = new UserSettings(getClass());
+        WebView webView = new WebView();
+        webView.getEngine().loadContent((String)settings.get(UserSettings.SETTINGS_ABOUT_TEXT));
+        webView.setPrefSize(400, 240);
+        alert.getDialogPane().setContent(webView);
+        alert.show();
+    }
+
+    public void helpImageViewClicked(MouseEvent mouseEvent){
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Help");
+        alert.setHeaderText("How to use this software");
+        UserSettings settings = new UserSettings(getClass());
+        alert.setContentText((String)settings.get(UserSettings.SETTINGS_HELP_TEXT));
+        alert.show();
+    }
+
     public void timeComboBoxChose(ActionEvent actionEvent){
         int index = timeComboBox.getSelectionModel().getSelectedIndex();
         if(index == 0) TIME = 30;
@@ -264,50 +314,69 @@ public class MainController {
         if(currentState != States.Writing) return;
 
         if(currentTimeLapse >= TIME){
-            if(textArea.isEditable())
+            if(textArea.isEditable()) {
                 textArea.setEditable(false);
+                playSound(sounds.get(Sounds.WINNING_SOUND));
+            }
             return;
         }
 
-        playSound(sounds.get(FileFactory.Sounds.TYPING_SOUND));
-
         KeyCode code = keyEvent.getCode();
 
-        String textAreaText = textArea.getText();
-        String[] words = textAreaText.split("\\s+");
+        String taText = textArea.getText();
+        String[] taWords = taText.split("\\s+");
+        String taLastWord = taWords[taWords.length - 1];
+        String taLastWord_ = taText.length() == 0 ? keyEvent.getText():
+                taText.charAt(taText.length() - 1) == ' ' ?
+                        keyEvent.getText(): taLastWord + keyEvent.getText();
 
-        String textFieldText = textField.getText();
-        String[] tfWords = textFieldText.split("\\s+");
+        String tfText = textField.getText();
+        String[] tfWords = tfText.split("\\s+");
+        String tfFirstWord = tfWords[0];
+
+        if(code == KeyCode.SHIFT || code == KeyCode.BACK_SPACE){
+            return;
+        }
 
         if(code == KeyCode.SPACE){
-            String firstWord = tfWords[0];
-            currentTextIndex += firstWord.length() + 1;
+            currentTextIndex += tfFirstWord.length() + 1;
 
-            if(words[words.length - 1].equals(firstWord)){
-                correctTextLength += firstWord.length();
+            if(taLastWord.equals(tfFirstWord)){
+                correctTextLength += tfFirstWord.length();
             }else {
                 ArrayList<Object> deletedWord = getDeletedWord();
                 if(deletedWord == null) return;
                 errors.add((int) deletedWord.get(1));
             }
+
+            if(taLastWord.length() == tfFirstWord.length())
+                playSound(sounds.get(Sounds.TYPING_SOUND));
+            else{
+                playSound(sounds.get(Sounds.TYPING_ERROR_SOUND));
+                makeTextAreaRed();
+            }
             setErrorsLabel();
             setWpmLabel(findWpm());
 
-            if(textFieldText.length() > firstWord.length())
-                textField.setText(textFieldText.substring(firstWord.length() + 1));
+            if(tfText.length() > tfFirstWord.length())
+                textField.setText(tfText.substring(tfFirstWord.length() + 1));
             else {
                 textField.setText("");
                 stopTyping();
             }
-        }else if(code == KeyCode.BACK_SPACE){
-            deletedLetters++;
         }else if(code == KeyCode.UP || code == KeyCode.DOWN ||
                 code == KeyCode.RIGHT || code == KeyCode.LEFT){
             textArea.positionCaret(textArea.getText().length());
-        }else if(tfWords.length == 1 && (words[words.length - 1] + keyEvent.getText())
-                .equals(tfWords[tfWords.length - 1])){
+        }else if(tfWords.length == 1 && taLastWord_.equals(tfWords[tfWords.length - 1])){
             textArea.appendText(keyEvent.getText());
             stopTyping();
+        }else if(tfFirstWord.length() >= taLastWord_.length() &&
+                taLastWord_.equals(tfFirstWord.substring(0, taLastWord_.length()))){
+            playSound(sounds.get(Sounds.TYPING_SOUND));
+        }else{
+            wrongLetters++;
+            playSound(sounds.get(Sounds.TYPING_ERROR_SOUND));
+            makeTextAreaRed();
         }
 
     }
@@ -325,7 +394,10 @@ public class MainController {
 
         Parent root;
         try {
-            root = FXMLLoader.load(getClass().getResource("../layouts/changeText.fxml"));
+            String name = "../layouts/changeText.fxml";
+            if(IS_PRODUCTION) name = name.replace("..", PARENT_PATH);
+
+            root = FXMLLoader.load(getClass().getResource(name));
             Stage stage = new Stage();
             stage.setResizable(false);
             stage.setTitle("Change Text");
@@ -337,6 +409,22 @@ public class MainController {
         catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void makeTextAreaRed(){
+        if(!isWarning || isMakingTextAreaRed) return;
+
+        isMakingTextAreaRed = true;
+        textArea.setStyle("-fx-text-fill: #DF2222;");
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                new Thread(() -> Platform.runLater(() -> {
+                    textArea.setStyle("-fx-text-fill: #333;");
+                })).start();
+                isMakingTextAreaRed = false;
+            }
+        }, 500);
     }
 
     private ArrayList<Object> getDeletedWord(){
@@ -366,7 +454,7 @@ public class MainController {
     private String getAccuracy(){
         String text = currentPreparedText.getText(getClass());// I think we should count missed words as accuracy reducers also
         double cLetters = text.replace(" ", "").length();
-        double result = Math.round((1 - (deletedLetters / (cLetters))) * 1000) / 10.0;
+        double result = Math.round((1 - (wrongLetters / (cLetters))) * 1000) / 10.0;
         return result == Math.round(result) ? ((int) result) + "" : result + "";
     }
 
@@ -403,15 +491,23 @@ public class MainController {
         });
     }
 
-    private void playSound(MediaPlayer player){
+    private void playSound(Media media){
         if(isMuted) return;
-        player.stop();
-        player.play();
+        if (currentMediaPlayer != null) {
+            currentMediaPlayer.dispose();
+        }
+        currentMediaPlayer = new MediaPlayer(media);
+        currentMediaPlayer.setAutoPlay(true);
     }
 
     private Font tryLoadFont(String fontName, double size){
         try {
-            String fixedPath = getClass().
+            String fixedPath;
+            if(IS_PRODUCTION) fixedPath = getClass().
+                    getResource(PARENT_PATH + "/Fonts/" + fontName).toURI().
+                    toString().replace("%20", " ");
+            else
+                fixedPath = getClass().
                     getResource("../Fonts/" + fontName).toURI().
                     toString().replace("%20", " ");
             Font font = Font.loadFont(fixedPath, size);
